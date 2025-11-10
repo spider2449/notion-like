@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-header">
+            <h1>Admin Panel</h1>
+            <div class="header-actions">
+                <button onclick="goToApp()" class="btn-secondary">Back to App</button>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <p id="total-users" class="stat-number">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Admin Users</h3>
+                <p id="admin-users" class="stat-number">-</p>
+            </div>
+            <div class="stat-card">
+                <h3>Regular Users</h3>
+                <p id="regular-users" class="stat-number">-</p>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div class="section-header">
+                <h2>User Management</h2>
+                <button onclick="showCreateUserModal()" class="btn-primary">Create User</button>
+            </div>
+            
+            <div class="users-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr>
+                            <td colspan="6" class="loading">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New User</h3>
+                <span class="close" onclick="closeCreateUserModal()">&times;</span>
+            </div>
+            <form id="createUserForm">
+                <input type="text" id="new-username" placeholder="Username" required>
+                <input type="email" id="new-email" placeholder="Email" required>
+                <input type="password" id="new-password" placeholder="Password (min 6 characters)" required>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="new-is-admin">
+                    <span>Admin privileges</span>
+                </label>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeCreateUserModal()" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+</body>
+</html>

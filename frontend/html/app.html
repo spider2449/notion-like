@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Clone</title>
+    <link rel="stylesheet" href="../css/app.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📝 My Workspace</h2>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+            
+            <div class="sidebar-search">
+                <input type="text" class="search-input" placeholder="Search..." id="searchInput">
+            </div>
+            
+            <div class="sidebar-actions">
+                <button id="newDocBtn" class="btn-action">
+                    <span>➕</span>
+                    <span>New Page</span>
+                </button>
+                <button id="newFolderBtn" class="btn-action">
+                    <span>📁</span>
+                    <span>New Folder</span>
+                </button>
+            </div>
+            
+            <div id="navigationTree" class="navigation-tree">
+                <!-- Navigation tree will be rendered here -->
+            </div>
+            
+            <div class="sidebar-bottom">
+                <button id="accountBtn" class="btn-action">
+                    <span>⚙️</span>
+                    <span>Account Settings</span>
+                </button>
+                <button id="adminBtn" class="btn-action" style="display: none;">
+                    <span>👑</span>
+                    <span>Admin Panel</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Editor Area -->
+        <main class="main-content">
+            <div id="editorContainer" class="editor-container">
+                <div class="editor-placeholder">
+                    <h2>Select a document to start editing</h2>
+                    <p>Choose a document from the sidebar or create a new one</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Slash Command Menu -->
+    <div id="slashMenu" class="slash-menu">
+        <div class="slash-menu-item" data-type="paragraph">
+            <span class="menu-item-icon">📄</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Text</div>
+                <div class="menu-item-description">Just start writing with plain text</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="heading1">
+            <span class="menu-item-icon">H1</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Heading 1</div>
+                <div class="menu-item-description">Big section heading</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="heading2">
+            <span class="menu-item-icon">H2</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Heading 2</div>
+                <div class="menu-item-description">Medium section heading</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="heading3">
+            <span class="menu-item-icon">H3</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Heading 3</div>
+                <div class="menu-item-description">Small section heading</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="bullet_list">
+            <span class="menu-item-icon">•</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Bulleted list</div>
+                <div class="menu-item-description">Create a simple bulleted list</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="numbered_list">
+            <span class="menu-item-icon">1.</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Numbered list</div>
+                <div class="menu-item-description">Create a list with numbering</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="code">
+            <span class="menu-item-icon">{ }</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Code</div>
+                <div class="menu-item-description">Capture a code snippet</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="quote">
+            <span class="menu-item-icon">"</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Quote</div>
+                <div class="menu-item-description">Capture a quote</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="callout">
+            <span class="menu-item-icon">💡</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Callout</div>
+                <div class="menu-item-description">Make writing stand out</div>
+            </div>
+        </div>
+        <div class="slash-menu-item" data-type="divider">
+            <span class="menu-item-icon">―</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Divider</div>
+                <div class="menu-item-description">Visually divide blocks</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+    
+    <script src="../js/api-client.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script src="../js/editor-enhanced.js"></script>
+    <script src="../js/app.js"></script>
+</body>
+</html>

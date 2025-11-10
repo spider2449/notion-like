@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <link rel="stylesheet" href="/css/account.css">
+</head>
+<body>
+    <div class="container">
+        <div class="account-header">
+            <h1>Account Settings</h1>
+            <button onclick="goBack()" class="btn-secondary">Back to App</button>
+        </div>
+
+        <div class="account-section">
+            <h2>Profile Information</h2>
+            <div id="profile-info"></div>
+        </div>
+
+        <div class="account-section">
+            <h3>Update Username</h3>
+            <form id="username-form">
+                <input type="text" id="new-username" placeholder="New username" required>
+                <button type="submit" class="btn-primary">Update Username</button>
+            </form>
+        </div>
+
+        <div class="account-section">
+            <h3>Update Email</h3>
+            <form id="email-form">
+                <input type="email" id="new-email" placeholder="New email" required>
+                <button type="submit" class="btn-primary">Update Email</button>
+            </form>
+        </div>
+
+        <div class="account-section">
+            <h3>Change Password</h3>
+            <form id="password-form">
+                <input type="password" id="current-password" placeholder="Current password" required>
+                <input type="password" id="new-password" placeholder="New password (min 6 characters)" required>
+                <button type="submit" class="btn-primary">Change Password</button>
+            </form>
+        </div>
+
+        <div class="account-section danger-zone">
+            <h3>Danger Zone</h3>
+            <p>Once you delete your account, there is no going back. Please be certain.</p>
+            <form id="delete-form">
+                <input type="password" id="delete-password" placeholder="Enter password to confirm" required>
+                <button type="submit" class="btn-danger">Delete Account</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/account.js"></script>
+</body>
+</html>
