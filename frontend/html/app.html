@@ -35,6 +35,10 @@
             </div>
             
             <div class="sidebar-bottom">
+                <button id="themeToggle" class="btn-action">
+                    <span id="themeIcon">🌙</span>
+                    <span id="themeText">Dark Mode</span>
+                </button>
                 <button id="accountBtn" class="btn-action">
                     <span>⚙️</span>
                     <span>Account Settings</span>
@@ -129,6 +133,13 @@
                 <div class="menu-item-description">Visually divide blocks</div>
             </div>
         </div>
+        <div class="slash-menu-item" data-type="table">
+            <span class="menu-item-icon">⊞</span>
+            <div class="menu-item-content">
+                <div class="menu-item-title">Table</div>
+                <div class="menu-item-description">Add a simple table</div>
+            </div>
+        </div>
     </div>
     
     <!-- Loading Spinner -->
@@ -136,6 +147,7 @@
         <div class="spinner"></div>
     </div>
     
+    <script src="../js/theme.js"></script>
     <script src="../js/api-client.js"></script>
     <script src="../js/navigation.js"></script>
     <script src="../js/editor-enhanced.js"></script>

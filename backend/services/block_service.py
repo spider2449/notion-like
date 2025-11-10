@@ -4,7 +4,7 @@ from backend.utils.security import sanitize_input
 
 VALID_BLOCK_TYPES = ['paragraph', 'heading1', 'heading2', 'heading3', 
                      'bullet_list', 'numbered_list', 'code', 'quote', 
-                     'callout', 'toggle', 'divider']
+                     'callout', 'toggle', 'divider', 'table']
 
 class BlockService:
     """Service for block operations."""

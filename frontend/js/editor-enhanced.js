@@ -114,23 +114,30 @@ function createBlockElement(block) {
     
     const contentDiv = document.createElement('div');
     contentDiv.className = 'block-content';
-    contentDiv.contentEditable = true;
-    contentDiv.textContent = block.content;
     
-    // Add input listener for auto-save
-    contentDiv.addEventListener('input', () => {
-        handleBlockInput(block.id, contentDiv.textContent);
-    });
-    
-    // Add keyboard shortcuts
-    contentDiv.addEventListener('keydown', (e) => {
-        handleBlockKeydown(e, block.id, contentDiv);
-    });
-    
-    // Add keyup for slash command
-    contentDiv.addEventListener('keyup', (e) => {
-        handleSlashCommand(e, block.id, contentDiv);
-    });
+    // Handle table block type differently
+    if (block.block_type === 'table') {
+        contentDiv.contentEditable = false;
+        renderTableContent(contentDiv, block);
+    } else {
+        contentDiv.contentEditable = true;
+        contentDiv.textContent = block.content;
+        
+        // Add input listener for auto-save
+        contentDiv.addEventListener('input', () => {
+            handleBlockInput(block.id, contentDiv.textContent);
+        });
+        
+        // Add keyboard shortcuts
+        contentDiv.addEventListener('keydown', (e) => {
+            handleBlockKeydown(e, block.id, contentDiv);
+        });
+        
+        // Add keyup for slash command
+        contentDiv.addEventListener('keyup', (e) => {
+            handleSlashCommand(e, block.id, contentDiv);
+        });
+    }
     
     // Drag and drop handlers
     blockDiv.addEventListener('dragstart', handleDragStart);
@@ -446,21 +453,257 @@ async function deleteBlockAndFocusPrevious(blockId) {
     }
 }
 
+function renderTableContent(contentDiv, block) {
+    // Parse table data from content (stored as JSON)
+    let tableData;
+    try {
+        tableData = block.content ? JSON.parse(block.content) : { rows: 3, cols: 3, data: {} };
+    } catch (e) {
+        // Default table structure
+        tableData = { rows: 3, cols: 3, data: {} };
+    }
+    
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'table-wrapper';
+    
+    const table = document.createElement('table');
+    
+    // Create header row
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    for (let col = 0; col < tableData.cols; col++) {
+        const th = document.createElement('th');
+        th.contentEditable = true;
+        th.textContent = tableData.data[`0-${col}`] || `Column ${col + 1}`;
+        th.addEventListener('input', () => {
+            saveTableData(block.id, tableWrapper);
+        });
+        headerRow.appendChild(th);
+    }
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Create body rows
+    const tbody = document.createElement('tbody');
+    for (let row = 1; row < tableData.rows; row++) {
+        const tr = document.createElement('tr');
+        for (let col = 0; col < tableData.cols; col++) {
+            const td = document.createElement('td');
+            td.contentEditable = true;
+            td.textContent = tableData.data[`${row}-${col}`] || '';
+            td.addEventListener('input', () => {
+                saveTableData(block.id, tableWrapper);
+            });
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    
+    tableWrapper.appendChild(table);
+    
+    // Add table controls
+    const controls = document.createElement('div');
+    controls.className = 'table-controls';
+    
+    const addRowBtn = document.createElement('button');
+    addRowBtn.className = 'table-control-btn';
+    addRowBtn.textContent = '+ Add Row';
+    addRowBtn.onclick = (e) => {
+        e.preventDefault();
+        addTableRow(block.id, tableWrapper);
+    };
+    
+    const addColBtn = document.createElement('button');
+    addColBtn.className = 'table-control-btn';
+    addColBtn.textContent = '+ Add Column';
+    addColBtn.onclick = (e) => {
+        e.preventDefault();
+        addTableColumn(block.id, tableWrapper);
+    };
+    
+    const deleteRowBtn = document.createElement('button');
+    deleteRowBtn.className = 'table-control-btn table-control-delete';
+    deleteRowBtn.textContent = '− Delete Row';
+    deleteRowBtn.onclick = (e) => {
+        e.preventDefault();
+        deleteTableRow(block.id, tableWrapper);
+    };
+    
+    const deleteColBtn = document.createElement('button');
+    deleteColBtn.className = 'table-control-btn table-control-delete';
+    deleteColBtn.textContent = '− Delete Column';
+    deleteColBtn.onclick = (e) => {
+        e.preventDefault();
+        deleteTableColumn(block.id, tableWrapper);
+    };
+    
+    controls.appendChild(addRowBtn);
+    controls.appendChild(addColBtn);
+    controls.appendChild(deleteRowBtn);
+    controls.appendChild(deleteColBtn);
+    
+    tableWrapper.appendChild(controls);
+    contentDiv.appendChild(tableWrapper);
+}
+
+function saveTableData(blockId, tableWrapper) {
+    // Extract data from table
+    const table = tableWrapper.querySelector('table');
+    const data = {};
+    let rows = 0;
+    let cols = 0;
+    
+    // Get header data
+    const headers = table.querySelectorAll('thead th');
+    cols = headers.length;
+    headers.forEach((th, col) => {
+        data[`0-${col}`] = th.textContent;
+    });
+    rows++;
+    
+    // Get body data
+    const bodyRows = table.querySelectorAll('tbody tr');
+    bodyRows.forEach((tr, rowIndex) => {
+        const cells = tr.querySelectorAll('td');
+        cells.forEach((td, col) => {
+            data[`${rowIndex + 1}-${col}`] = td.textContent;
+        });
+        rows++;
+    });
+    
+    const tableData = { rows, cols, data };
+    const content = JSON.stringify(tableData);
+    
+    // Save with debounce
+    handleBlockInput(blockId, content);
+}
+
+function addTableRow(blockId, tableWrapper) {
+    const table = tableWrapper.querySelector('table');
+    const tbody = table.querySelector('tbody');
+    const cols = table.querySelectorAll('thead th').length;
+    
+    const tr = document.createElement('tr');
+    for (let col = 0; col < cols; col++) {
+        const td = document.createElement('td');
+        td.contentEditable = true;
+        td.textContent = '';
+        td.addEventListener('input', () => {
+            saveTableData(blockId, tableWrapper);
+        });
+        tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+    
+    saveTableData(blockId, tableWrapper);
+}
+
+function addTableColumn(blockId, tableWrapper) {
+    const table = tableWrapper.querySelector('table');
+    
+    // Add header cell
+    const headerRow = table.querySelector('thead tr');
+    const th = document.createElement('th');
+    th.contentEditable = true;
+    th.textContent = `Column ${headerRow.children.length + 1}`;
+    th.addEventListener('input', () => {
+        saveTableData(blockId, tableWrapper);
+    });
+    headerRow.appendChild(th);
+    
+    // Add cell to each body row
+    const bodyRows = table.querySelectorAll('tbody tr');
+    bodyRows.forEach(tr => {
+        const td = document.createElement('td');
+        td.contentEditable = true;
+        td.textContent = '';
+        td.addEventListener('input', () => {
+            saveTableData(blockId, tableWrapper);
+        });
+        tr.appendChild(td);
+    });
+    
+    saveTableData(blockId, tableWrapper);
+}
+
+function deleteTableRow(blockId, tableWrapper) {
+    const table = tableWrapper.querySelector('table');
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    // Don't delete if only one row left
+    if (rows.length <= 1) {
+        alert('Table must have at least one data row');
+        return;
+    }
+    
+    // Delete last row
+    rows[rows.length - 1].remove();
+    saveTableData(blockId, tableWrapper);
+}
+
+function deleteTableColumn(blockId, tableWrapper) {
+    const table = tableWrapper.querySelector('table');
+    const headerRow = table.querySelector('thead tr');
+    const cols = headerRow.children.length;
+    
+    // Don't delete if only one column left
+    if (cols <= 1) {
+        alert('Table must have at least one column');
+        return;
+    }
+    
+    // Delete last column from header
+    headerRow.removeChild(headerRow.lastChild);
+    
+    // Delete last column from each body row
+    const bodyRows = table.querySelectorAll('tbody tr');
+    bodyRows.forEach(tr => {
+        if (tr.lastChild) {
+            tr.removeChild(tr.lastChild);
+        }
+    });
+    
+    saveTableData(blockId, tableWrapper);
+}
+
 async function changeBlockType(blockId, newType) {
     try {
-        // Update block type via API
-        await apiClient.updateBlock(blockId, null, newType);
+        const block = currentBlocks.find(b => b.id === blockId);
+        const oldType = block?.block_type;
         
-        // Update DOM
-        const blockElement = document.querySelector(`[data-block-id="${blockId}"]`);
-        if (blockElement) {
-            blockElement.dataset.type = newType;
+        // If changing to table, initialize with default table data
+        let newContent = null;
+        if (newType === 'table' && oldType !== 'table') {
+            const defaultTable = {
+                rows: 3,
+                cols: 3,
+                data: {
+                    '0-0': 'Column 1',
+                    '0-1': 'Column 2',
+                    '0-2': 'Column 3'
+                }
+            };
+            newContent = JSON.stringify(defaultTable);
         }
         
+        // Update block type via API
+        await apiClient.updateBlock(blockId, newContent, newType);
+        
         // Update local data
-        const block = currentBlocks.find(b => b.id === blockId);
         if (block) {
             block.block_type = newType;
+            if (newContent !== null) {
+                block.content = newContent;
+            }
+        }
+        
+        // Re-render the block
+        const blockElement = document.querySelector(`[data-block-id="${blockId}"]`);
+        if (blockElement && block) {
+            const newBlockElement = createBlockElement(block);
+            blockElement.replaceWith(newBlockElement);
         }
         
         showSaveIndicator('saved');
