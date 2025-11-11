@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Image Upload</title>
+</head>
+<body>
+    <h1>Test Image Upload</h1>
+    
+    <h2>Test 1: Paste Image URL</h2>
+    <p>Try pasting this URL in the image block: <code>https://via.placeholder.com/400</code></p>
+    
+    <h2>Test 2: Check Console</h2>
+    <p>Open browser console (F12) and look for these logs when you:</p>
+    <ol>
+        <li>Create an image block (type / and select Image)</li>
+        <li>Click the upload area</li>
+        <li>Select a file</li>
+    </ol>
+    
+    <h3>Expected Console Logs:</h3>
+    <pre>
+File selected: [filename] [size] bytes
+Starting upload for block: [id]
+Uploading to /api/upload/image...
+Upload response status: 200
+Upload successful, URL: /uploads/[filename]
+Saving image URL to block: [id] /uploads/[filename]
+    </pre>
+    
+    <h2>Test 3: Check Server Logs</h2>
+    <p>In your server terminal, you should see:</p>
+    <pre>
+Upload request received from user [id]
+Files in request: ['image']
+File received: [filename]
+File saved successfully
+    </pre>
+    
+    <h2>Troubleshooting Steps:</h2>
+    <ol>
+        <li><strong>If no logs appear:</strong> The click handler isn't working</li>
+        <li><strong>If "File selected" appears but nothing else:</strong> Upload function has an error</li>
+        <li><strong>If upload fails with 401:</strong> Authentication issue</li>
+        <li><strong>If upload fails with 404:</strong> Server not restarted</li>
+        <li><strong>If upload succeeds but image doesn't show:</strong> Rendering issue</li>
+    </ol>
+    
+    <h2>Quick Fix: Try URL Method</h2>
+    <p>Instead of uploading, try pasting an image URL to test if rendering works:</p>
+    <ol>
+        <li>Create an image block</li>
+        <li>In the URL input field at the bottom, paste: <code>https://via.placeholder.com/400</code></li>
+        <li>Press Enter</li>
+        <li>The image should appear</li>
+    </ol>
+    
+    <p>If URL method works but upload doesn't, the issue is with the upload endpoint.</p>
+</body>
+</html>

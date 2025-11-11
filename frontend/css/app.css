@@ -371,7 +371,7 @@ body {
 }
 
 .block-content:empty:before {
-    content: "Type '/' for commands";
+    content: attr(data-placeholder);
     color: var(--text-secondary);
     opacity: 0.6;
 }
@@ -473,6 +473,14 @@ body {
     height: 1px;
 }
 
+.block[data-type="divider"] .block-content {
+    display: none;
+}
+
+.block[data-type="divider"] .block-content:empty:before {
+    content: none;
+}
+
 .block[data-type="table"] .block-content {
     padding: 0;
 }
@@ -545,6 +553,119 @@ body {
 .table-control-delete:hover {
     background: #ffebee;
     border-color: #e74c3c;
+}
+
+/* Image Block Styles */
+.block[data-type="image"] .block-content {
+    padding: 0;
+}
+
+.image-wrapper {
+    margin: 8px 0;
+    position: relative;
+}
+
+.block-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+    display: block;
+}
+
+.image-caption {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 4px;
+    border-radius: 3px;
+    outline: none;
+}
+
+.image-caption:empty:before {
+    content: 'Add a caption...';
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.image-caption:focus {
+    background: var(--hover-bg);
+}
+
+.image-change-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-wrapper:hover .image-change-btn {
+    opacity: 1;
+}
+
+.image-change-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.image-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--hover-bg);
+}
+
+.image-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(35, 131, 226, 0.05);
+}
+
+.upload-prompt {
+    color: var(--text-secondary);
+}
+
+.upload-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.upload-prompt p {
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+.upload-hint {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.image-url-input {
+    width: 100%;
+    padding: 8px 12px;
+    margin-top: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    transition: all 0.15s ease;
+}
+
+.image-url-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(35, 131, 226, 0.1);
 }
 
 .block-delete {

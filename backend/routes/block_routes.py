@@ -117,3 +117,62 @@ def reorder_blocks(document_id):
         return jsonify({'error': 'Unauthorized'}), 403
     except Exception as e:
         return jsonify({'error': 'Internal server error'}), 500
+
+@bp.route('/upload/image', methods=['POST'])
+@require_auth
+def upload_image():
+    """Upload an image file."""
+    try:
+        print(f"Upload request received from user {g.user_id}")
+        print(f"Files in request: {list(request.files.keys())}")
+        
+        if 'image' not in request.files:
+            print("Error: No 'image' field in request.files")
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        print(f"File received: {file.filename}")
+        
+        if file.filename == '':
+            print("Error: Empty filename")
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Check file extension
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'}
+        file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+        print(f"File extension: {file_ext}")
+        
+        if file_ext not in allowed_extensions:
+            print(f"Error: Invalid extension {file_ext}")
+            return jsonify({'error': 'Invalid file type. Allowed: png, jpg, jpeg, gif, webp, svg'}), 400
+        
+        # Generate unique filename
+        import uuid
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+        print(f"Generated unique filename: {unique_filename}")
+        
+        # Save file
+        from flask import current_app
+        import os
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+        print(f"Saving to: {filepath}")
+        
+        file.save(filepath)
+        print(f"File saved successfully")
+        
+        # Return URL
+        image_url = f"/uploads/{unique_filename}"
+        print(f"Returning URL: {image_url}")
+        
+        return jsonify({
+            'message': 'Image uploaded successfully',
+            'url': image_url
+        }), 200
+        
+    except Exception as e:
+        print(f"Upload error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Failed to upload image: {str(e)}'}), 500

@@ -90,6 +90,22 @@ function renderEditor(doc) {
     }
 }
 
+function getPlaceholderText(blockType) {
+    const placeholders = {
+        'paragraph': "Type '/' for commands",
+        'heading1': 'Heading 1',
+        'heading2': 'Heading 2',
+        'heading3': 'Heading 3',
+        'bullet_list': 'List',
+        'numbered_list': 'List',
+        'code': 'Code',
+        'quote': 'Quote',
+        'callout': 'Callout',
+        'divider': 'Divider'
+    };
+    return placeholders[blockType] || "Type '/' for commands";
+}
+
 function createBlockElement(block) {
     const blockDiv = document.createElement('div');
     blockDiv.className = 'block';
@@ -115,13 +131,32 @@ function createBlockElement(block) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'block-content';
     
-    // Handle table block type differently
+    // Handle special block types differently
     if (block.block_type === 'table') {
         contentDiv.contentEditable = false;
         renderTableContent(contentDiv, block);
+    } else if (block.block_type === 'image') {
+        contentDiv.contentEditable = false;
+        renderImageContent(contentDiv, block);
+    } else if (block.block_type === 'divider') {
+        // Divider is just a visual element, no content needed
+        contentDiv.contentEditable = false;
+        contentDiv.innerHTML = '';
     } else {
         contentDiv.contentEditable = true;
-        contentDiv.textContent = block.content;
+        
+        // Decode HTML entities for code blocks (in case old data has encoded content)
+        let content = block.content;
+        if (block.block_type === 'code' && content && content.includes('&')) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = content;
+            content = textarea.value;
+        }
+        
+        contentDiv.textContent = content;
+        
+        // Set placeholder based on block type
+        contentDiv.setAttribute('data-placeholder', getPlaceholderText(block.block_type));
         
         // Add input listener for auto-save
         contentDiv.addEventListener('input', () => {
@@ -175,6 +210,13 @@ function handleBlockKeydown(e, blockId, contentDiv) {
         }
     }
     
+    // Slash key - show slash menu (prevent default to avoid typing '/')
+    if (e.key === '/' && contentDiv.textContent === '') {
+        e.preventDefault();
+        showSlashMenu(contentDiv, blockId);
+        return;
+    }
+    
     // Enter key - create new block
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -199,9 +241,8 @@ function handleBlockKeydown(e, blockId, contentDiv) {
 function handleSlashCommand(e, blockId, contentDiv) {
     const text = contentDiv.textContent;
     
-    if (text === '/') {
-        showSlashMenu(contentDiv, blockId);
-    } else if (slashMenuVisible && !text.startsWith('/')) {
+    // Hide menu if user starts typing something other than slash
+    if (slashMenuVisible && text.length > 0) {
         hideSlashMenu();
     }
 }
@@ -286,7 +327,7 @@ function updateSlashMenuSelection() {
     });
 }
 
-function selectSlashMenuItem(clearSlash = true) {
+function selectSlashMenuItem() {
     const items = document.querySelectorAll('.slash-menu-item');
     const selectedItem = items[selectedSlashIndex];
     if (selectedItem) {
@@ -295,11 +336,6 @@ function selectSlashMenuItem(clearSlash = true) {
         
         const blockElement = document.querySelector(`[data-block-id="${slashMenuBlockId}"]`);
         const contentDiv = blockElement.querySelector('.block-content');
-        
-        // Clear the slash if triggered from slash command
-        if (clearSlash && contentDiv.textContent === '/') {
-            contentDiv.textContent = '';
-        }
         
         hideSlashMenu();
         contentDiv.focus();
@@ -668,12 +704,176 @@ function deleteTableColumn(blockId, tableWrapper) {
     saveTableData(blockId, tableWrapper);
 }
 
+function renderImageContent(contentDiv, block) {
+    const imageWrapper = document.createElement('div');
+    imageWrapper.className = 'image-wrapper';
+    
+    // Parse image data from content (stored as JSON)
+    let imageData;
+    try {
+        // Handle empty or whitespace content
+        if (!block.content || block.content.trim() === '') {
+            imageData = { url: '', caption: '' };
+        } else {
+            // Decode HTML entities if present
+            let content = block.content;
+            if (content.includes('&quot;')) {
+                const textarea = document.createElement('textarea');
+                textarea.innerHTML = content;
+                content = textarea.value;
+            }
+            imageData = JSON.parse(content);
+        }
+    } catch (e) {
+        console.error('Failed to parse image content:', e);
+        imageData = { url: '', caption: '' };
+    }
+    
+    if (imageData.url) {
+        // Display image
+        const img = document.createElement('img');
+        img.src = imageData.url;
+        img.alt = imageData.caption || 'Image';
+        img.className = 'block-image';
+        imageWrapper.appendChild(img);
+        
+        // Caption
+        const caption = document.createElement('div');
+        caption.className = 'image-caption';
+        caption.contentEditable = true;
+        caption.textContent = imageData.caption || '';
+        caption.placeholder = 'Add a caption...';
+        caption.addEventListener('input', () => {
+            imageData.caption = caption.textContent;
+            handleBlockInput(block.id, JSON.stringify(imageData));
+        });
+        imageWrapper.appendChild(caption);
+        
+        // Change image button
+        const changeBtn = document.createElement('button');
+        changeBtn.className = 'image-change-btn';
+        changeBtn.textContent = 'Change Image';
+        changeBtn.onclick = (e) => {
+            e.preventDefault();
+            triggerImageUpload(block.id);
+        };
+        imageWrapper.appendChild(changeBtn);
+    } else {
+        // Upload interface
+        const uploadArea = document.createElement('div');
+        uploadArea.className = 'image-upload-area';
+        uploadArea.innerHTML = `
+            <div class="upload-prompt">
+                <span class="upload-icon">📷</span>
+                <p>Click to upload an image</p>
+                <p class="upload-hint">or paste an image URL</p>
+            </div>
+        `;
+        
+        uploadArea.onclick = () => {
+            triggerImageUpload(block.id);
+        };
+        
+        // URL input
+        const urlInput = document.createElement('input');
+        urlInput.type = 'text';
+        urlInput.className = 'image-url-input';
+        urlInput.placeholder = 'Paste image URL...';
+        urlInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const url = urlInput.value.trim();
+                if (url) {
+                    await saveImageUrl(block.id, url);
+                }
+            }
+        });
+        
+        imageWrapper.appendChild(uploadArea);
+        imageWrapper.appendChild(urlInput);
+    }
+    
+    contentDiv.appendChild(imageWrapper);
+}
+
+function triggerImageUpload(blockId) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            await uploadImage(blockId, file);
+        }
+    };
+    input.click();
+}
+
+async function uploadImage(blockId, file) {
+    try {
+        showSaveIndicator('saving');
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch('/api/upload/image', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Upload failed');
+        }
+        
+        const data = await response.json();
+        await saveImageUrl(blockId, data.url);
+        
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        showSaveIndicator('error');
+        alert('Failed to upload image: ' + error.message);
+    }
+}
+
+async function saveImageUrl(blockId, url) {
+    try {
+        const imageData = { url, caption: '' };
+        const content = JSON.stringify(imageData);
+        
+        await apiClient.updateBlock(blockId, content);
+        
+        // Update local data
+        const block = currentBlocks.find(b => b.id === blockId);
+        if (block) {
+            block.content = content;
+        }
+        
+        // Re-render the block
+        const blockElement = document.querySelector(`[data-block-id="${blockId}"]`);
+        if (blockElement && block) {
+            const newBlockElement = createBlockElement(block);
+            blockElement.replaceWith(newBlockElement);
+        }
+        
+        showSaveIndicator('saved');
+        
+    } catch (error) {
+        console.error('Error saving image:', error);
+        showSaveIndicator('error');
+        alert('Failed to save image: ' + error.message);
+    }
+}
+
 async function changeBlockType(blockId, newType) {
     try {
         const block = currentBlocks.find(b => b.id === blockId);
         const oldType = block?.block_type;
         
-        // If changing to table, initialize with default table data
+        // Initialize content for special block types
         let newContent = null;
         if (newType === 'table' && oldType !== 'table') {
             const defaultTable = {
@@ -686,6 +886,9 @@ async function changeBlockType(blockId, newType) {
                 }
             };
             newContent = JSON.stringify(defaultTable);
+        } else if (newType === 'image' && oldType !== 'image') {
+            const defaultImage = { url: '', caption: '' };
+            newContent = JSON.stringify(defaultImage);
         }
         
         // Update block type via API
@@ -754,13 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', (e) => {
             e.stopPropagation();
             selectedSlashIndex = index;
-            
-            // Check if we should clear the slash (if content is just "/")
-            const blockElement = document.querySelector(`[data-block-id="${slashMenuBlockId}"]`);
-            const contentDiv = blockElement?.querySelector('.block-content');
-            const shouldClearSlash = contentDiv?.textContent === '/';
-            
-            selectSlashMenuItem(shouldClearSlash);
+            selectSlashMenuItem();
         });
     });
     

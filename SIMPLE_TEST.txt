@@ -1,0 +1,32 @@
+// COPY AND PASTE THIS ENTIRE BLOCK INTO BROWSER CONSOLE (F12)
+
+// Test 1: Check authentication
+console.log("Token exists:", !!localStorage.getItem('token'));
+
+// Test 2: Find image blocks
+const imageBlocks = document.querySelectorAll('[data-type="image"]');
+console.log("Image blocks found:", imageBlocks.length);
+
+// Test 3: Try saving a test image URL
+if (imageBlocks.length > 0) {
+    const blockId = imageBlocks[0].dataset.blockId;
+    console.log("Testing with block ID:", blockId);
+    
+    const testUrl = "https://via.placeholder.com/400";
+    const imageData = { url: testUrl, caption: "Test" };
+    const content = JSON.stringify(imageData);
+    
+    apiClient.updateBlock(blockId, content)
+        .then(response => {
+            console.log("✅ SUCCESS! Image URL saved:", response);
+            console.log("Now reload the page to see if image appears");
+        })
+        .catch(error => {
+            console.error("❌ FAILED:", error);
+        });
+} else {
+    console.log("⚠️  No image blocks found. Create one first:");
+    console.log("1. Type / in the document");
+    console.log("2. Select 'Image' from the menu");
+    console.log("3. Then run this test again");
+}

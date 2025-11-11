@@ -4,7 +4,7 @@ from backend.utils.security import sanitize_input
 
 VALID_BLOCK_TYPES = ['paragraph', 'heading1', 'heading2', 'heading3', 
                      'bullet_list', 'numbered_list', 'code', 'quote', 
-                     'callout', 'toggle', 'divider', 'table']
+                     'callout', 'toggle', 'divider', 'table', 'image']
 
 class BlockService:
     """Service for block operations."""
@@ -12,8 +12,9 @@ class BlockService:
     @staticmethod
     def create_block(document_id, user_id, content='', block_type='paragraph'):
         """Create a new block with automatic order_index assignment."""
-        # Sanitize content
-        content = sanitize_input(content)
+        # Sanitize content (skip for code blocks, tables, and images which need raw content)
+        if block_type not in ['code', 'table', 'image']:
+            content = sanitize_input(content)
         
         # Verify document exists and user owns it
         document = DocumentRepository.find_by_id(document_id)
@@ -35,10 +36,6 @@ class BlockService:
     @staticmethod
     def update_block(block_id, user_id, content=None, block_type=None):
         """Update block content and/or type."""
-        # Sanitize content if provided
-        if content is not None:
-            content = sanitize_input(content)
-        
         # Verify block exists
         block = BlockRepository.find_by_id(block_id)
         if not block:
@@ -52,6 +49,13 @@ class BlockService:
         # Validate block type if provided
         if block_type and block_type not in VALID_BLOCK_TYPES:
             raise ValueError(f'Invalid block type. Must be one of: {", ".join(VALID_BLOCK_TYPES)}')
+        
+        # Determine which block type to check (new type if changing, or existing type)
+        check_type = block_type if block_type else block.block_type
+        
+        # Sanitize content if provided (skip for code blocks, tables, and images)
+        if content is not None and check_type not in ['code', 'table', 'image']:
+            content = sanitize_input(content)
         
         return BlockRepository.update(block_id, content, block_type)
     
