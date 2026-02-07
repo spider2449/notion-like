@@ -27,6 +27,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install pytest requests   # ← 這裡把 requests 裝進去
+        # 如果你有 requirements.txt，就改成這樣：
+        # pip install -r requirements.txt
+        # 或是如果你有 pyproject.toml / setup.py，也可使用 pip install .
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
